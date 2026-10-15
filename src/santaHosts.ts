@@ -92,15 +92,44 @@ export async function findHostByMachineId(
   return rows[0] ?? null;
 }
 
+function looksLikeJsonUtf8(buf: Buffer): boolean {
+  let i = 0;
+  while (i < buf.length && (buf[i] === 0x20 || buf[i] === 0x09 || buf[i] === 0x0a || buf[i] === 0x0d)) {
+    i++;
+  }
+  if (i >= buf.length) return false;
+  const c = buf[i];
+  return c === 0x7b /* { */ || c === 0x5b /* [ */;
+}
+
+/**
+ * Santa sends Content-Encoding: deflate|gzip. API Gateway (esp. HTTP API) may
+ * already decompress the body while still forwarding Content-Encoding — inflating
+ * again yields garbage and "invalid json" / santactl "bad request".
+ */
 function decodeSantaBody(buf: Buffer, contentEncoding: string | null): Buffer {
+  if (buf.length === 0) return buf;
+  // Already plaintext JSON (API GW pre-decompressed, or client sent identity).
+  if (looksLikeJsonUtf8(buf)) return buf;
+
   const enc = (contentEncoding ?? "").toLowerCase().trim();
   if (!enc || enc === "identity" || enc === "none") return buf;
-  if (enc === "gzip" || enc === "x-gzip") return gunzipSync(buf);
+  if (enc === "gzip" || enc === "x-gzip") {
+    try {
+      return gunzipSync(buf);
+    } catch {
+      return buf;
+    }
+  }
   if (enc === "deflate") {
     try {
       return inflateSync(buf);
     } catch {
-      return inflateRawSync(buf);
+      try {
+        return inflateRawSync(buf);
+      } catch {
+        return buf;
+      }
     }
   }
   return buf;

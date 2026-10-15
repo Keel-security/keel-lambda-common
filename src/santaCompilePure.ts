@@ -68,7 +68,14 @@ export function compileBlockedPathRegex(deny: DenyLists): string | null {
 
 export type CompileSantaOptions = {
   allowTeamIds?: string[];
+  /** BLOCKLIST BINARY rules for denyExec-matched observed hashes. */
   binaryHints?: SantaBinaryHint[];
+  /**
+   * ALLOWLIST BINARY rules (e.g. keel-mcp-gateway). Used with Santa+wrap:
+   * Keel injects the gateway; Santa allowlists it. Do not BLOCKLIST upstream
+   * MCP server binaries — that would also block gateway children.
+   */
+  allowBinaries?: SantaBinaryHint[];
 };
 
 /**
@@ -83,6 +90,7 @@ export function compileSantaFromDenyLists(
     ? { binaryHints: binaryHintsOrOpts }
     : binaryHintsOrOpts;
   const binaryHints = opts.binaryHints ?? [];
+  const allowBinaries = opts.allowBinaries ?? [];
   const allowTeamIds = opts.allowTeamIds ?? [];
 
   const blockedPathRegex = compileBlockedPathRegex(deny);
@@ -94,6 +102,21 @@ export function compileSantaFromDenyLists(
       custom_msg: "Keel — allow Santa vendor TeamID",
     }),
   ];
+
+  const seenAllowHash = new Set<string>();
+  for (const hint of allowBinaries) {
+    const sha = hint.sha256.trim().toLowerCase();
+    if (!/^[a-f0-9]{64}$/.test(sha) || seenAllowHash.has(sha)) continue;
+    seenAllowHash.add(sha);
+    rules.push(
+      withCamel({
+        identifier: sha,
+        policy: "ALLOWLIST",
+        rule_type: "BINARY",
+        custom_msg: `Keel allow — ${hint.name || "keel-mcp-gateway"}`,
+      }),
+    );
+  }
 
   const seenTeam = new Set<string>([SANTA_VENDOR_TEAM_ID]);
   for (const tid of allowTeamIds) {
