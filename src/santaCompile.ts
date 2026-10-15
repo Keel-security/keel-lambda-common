@@ -22,7 +22,7 @@ export async function compileSantaForMachine(
       hostname,
       ...compileSantaFromDenyLists(
         { denyExec: [], denyPathPrefixes: [], denyDestinations: [] },
-        { allowTeamIds: [] },
+        { allowTeamIds: [], allowBinaries: loadAllowBinariesFromEnv() },
       ),
     };
   }
@@ -39,8 +39,29 @@ export async function compileSantaForMachine(
     ...compileSantaFromDenyLists(deny, {
       allowTeamIds: policy.allowTeamIds ?? [],
       binaryHints: hints,
+      allowBinaries: loadAllowBinariesFromEnv(),
     }),
   };
+}
+
+/** JSON array in SANTA_ALLOW_BINARIES, e.g. [{"sha256":"…","name":"keel-mcp-gateway"}] */
+export function loadAllowBinariesFromEnv(): SantaBinaryHint[] {
+  const raw = process.env.SANTA_ALLOW_BINARIES?.trim();
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    const out: SantaBinaryHint[] = [];
+    for (const item of parsed) {
+      if (!item || typeof item !== "object") continue;
+      const sha = String((item as { sha256?: unknown }).sha256 ?? "").trim().toLowerCase();
+      const name = String((item as { name?: unknown }).name ?? "allow").trim();
+      if (/^[a-f0-9]{64}$/.test(sha)) out.push({ sha256: sha, name });
+    }
+    return out;
+  } catch {
+    return [];
+  }
 }
 
 async function loadBinaryHintsForDeny(
