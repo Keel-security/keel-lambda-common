@@ -133,6 +133,8 @@ export const hostPolicies = pgTable("host_policies", {
   agentRoots: jsonb("agent_roots").$type<AgentRootMatcherRow[]>().notNull().default([]),
   /** Kind-scoped rules (legacy; not used by simple Santa policy UX). */
   kindRules: jsonb("kind_rules").$type<KindPolicyRow[]>().notNull().default([]),
+  /** MCP auth methods the gateway must not use (bearer_static, oauth_client_credentials, …). */
+  mcpAuthDenied: jsonb("mcp_auth_denied").$type<string[]>().notNull().default([]),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

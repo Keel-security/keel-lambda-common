@@ -19,5 +19,11 @@ export type {
 } from "./santaCompilePure";
 export { DEFAULT_AGENT_ROOTS } from "./agentRoots";
 export { DEFAULT_KIND_RULES, POLICY_KIND_LABELS, mergeKindRules } from "./kindRules";
+export {
+  MCP_AUTH_METHOD_IDS,
+  MCP_AUTH_METHODS,
+  normalizeMcpAuthDenied,
+} from "./mcpAuth";
+export type { McpAuthMethod } from "./mcpAuth";
 export * from "./schemas/types";
 export * from "./schemas/santa";

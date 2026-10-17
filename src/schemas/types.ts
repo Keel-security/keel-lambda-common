@@ -144,6 +144,8 @@ export const HostPolicyPackSchema = z.object({
   effectiveDenyDestinations: z.array(z.string()).default([]),
   agentRoots: z.array(AgentRootMatcherSchema).default([]),
   kindRules: z.array(KindPolicySchema).default([]),
+  /** MCP auth methods the gateway must not use. Empty = all current methods allowed. */
+  mcpAuthDenied: z.array(z.string()).default([]),
   /** What Santa will receive on next sync (compiled). */
   santaPreview: SantaPreviewSchema.optional(),
   updatedAt: z.string(),
@@ -161,6 +163,7 @@ export const CreateHostPolicySchema = z.object({
   denyPathPrefixes: z.array(z.string()).optional(),
   denyDestinations: z.array(z.string()).optional(),
   allowTeamIds: z.array(z.string()).optional(),
+  mcpAuthDenied: z.array(z.string()).optional(),
   orgWide: z.boolean().optional().default(true),
 });
 export type CreateHostPolicy = z.infer<typeof CreateHostPolicySchema>;
@@ -176,6 +179,7 @@ export const PatchHostPolicySchema = z.object({
   denyPathPrefixes: z.array(z.string()).optional(),
   denyDestinations: z.array(z.string()).optional(),
   allowTeamIds: z.array(z.string()).optional(),
+  mcpAuthDenied: z.array(z.string()).optional(),
   agentRoots: z.array(AgentRootMatcherSchema).optional(),
   kindRules: z.array(KindPolicySchema).optional(),
 });
