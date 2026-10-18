@@ -9,7 +9,7 @@ export type AgentKind = z.infer<typeof AgentKindSchema>;
 export const PolicyModeSchema = z.enum(["observe", "enforce"]);
 export type PolicyMode = z.infer<typeof PolicyModeSchema>;
 
-export const SyscallSchema = z.enum(["execve", "open", "connect"]);
+export const SyscallSchema = z.enum(["execve", "open", "connect", "identity"]);
 export type Syscall = z.infer<typeof SyscallSchema>;
 
 export const DecisionSchema = z.enum(["allow", "deny", "observe"]);
@@ -146,6 +146,12 @@ export const HostPolicyPackSchema = z.object({
   kindRules: z.array(KindPolicySchema).default([]),
   /** MCP auth methods the gateway must not use. Empty = all current methods allowed. */
   mcpAuthDenied: z.array(z.string()).default([]),
+  /** Approved MCP servers (alias / host / URL / command). Empty = any. */
+  mcpAllow: z.array(z.string()).default([]),
+  /** Blocked MCP servers. Deny wins over allow. */
+  mcpDeny: z.array(z.string()).default([]),
+  /** Org email domains. Empty = detect-only, no alert. */
+  allowedEmailDomains: z.array(z.string()).default([]),
   /** What Santa will receive on next sync (compiled). */
   santaPreview: SantaPreviewSchema.optional(),
   updatedAt: z.string(),
@@ -164,6 +170,9 @@ export const CreateHostPolicySchema = z.object({
   denyDestinations: z.array(z.string()).optional(),
   allowTeamIds: z.array(z.string()).optional(),
   mcpAuthDenied: z.array(z.string()).optional(),
+  mcpAllow: z.array(z.string()).optional(),
+  mcpDeny: z.array(z.string()).optional(),
+  allowedEmailDomains: z.array(z.string()).optional(),
   orgWide: z.boolean().optional().default(true),
 });
 export type CreateHostPolicy = z.infer<typeof CreateHostPolicySchema>;
@@ -180,6 +189,9 @@ export const PatchHostPolicySchema = z.object({
   denyDestinations: z.array(z.string()).optional(),
   allowTeamIds: z.array(z.string()).optional(),
   mcpAuthDenied: z.array(z.string()).optional(),
+  mcpAllow: z.array(z.string()).optional(),
+  mcpDeny: z.array(z.string()).optional(),
+  allowedEmailDomains: z.array(z.string()).optional(),
   agentRoots: z.array(AgentRootMatcherSchema).optional(),
   kindRules: z.array(KindPolicySchema).optional(),
 });

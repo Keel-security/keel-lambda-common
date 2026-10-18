@@ -25,6 +25,7 @@ export {
   normalizeMcpAuthDenied,
 } from "./mcpAuth";
 export type { McpAuthMethod } from "./mcpAuth";
+export { normalizePatternList, normalizeEmailDomains } from "./policyLists";
 export * from "./schemas/types";
 export * from "./schemas/santa";
 export {

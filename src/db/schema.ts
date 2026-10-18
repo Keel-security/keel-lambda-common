@@ -15,7 +15,7 @@ import {
 export const hostStatusEnum = pgEnum("host_status", ["online", "stale", "offline"]);
 export const agentKindEnum = pgEnum("agent_kind", ["claude", "codex", "cursor", "other"]);
 export const policyModeEnum = pgEnum("policy_mode", ["observe", "enforce"]);
-export const syscallEnum = pgEnum("syscall", ["execve", "open", "connect"]);
+export const syscallEnum = pgEnum("syscall", ["execve", "open", "connect", "identity"]);
 export const decisionEnum = pgEnum("decision", ["allow", "deny", "observe"]);
 
 export const orgs = pgTable("orgs", {
@@ -137,6 +137,12 @@ export const hostPolicies = pgTable("host_policies", {
   kindRules: jsonb("kind_rules").$type<KindPolicyRow[]>().notNull().default([]),
   /** MCP auth methods the gateway must not use (bearer_static, oauth_client_credentials, …). */
   mcpAuthDenied: jsonb("mcp_auth_denied").$type<string[]>().notNull().default([]),
+  /** Approved MCP servers (alias, host, URL, or command). Empty = no allow restriction. */
+  mcpAllow: jsonb("mcp_allow").$type<string[]>().notNull().default([]),
+  /** Blocked MCP servers. Deny wins over allow. */
+  mcpDeny: jsonb("mcp_deny").$type<string[]>().notNull().default([]),
+  /** Org email domains for agent logins. Empty = inventory only, no alert. */
+  allowedEmailDomains: jsonb("allowed_email_domains").$type<string[]>().notNull().default([]),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

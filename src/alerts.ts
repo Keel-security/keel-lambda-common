@@ -82,6 +82,10 @@ export function deriveAlertTitle(
   const name = basename(subject);
 
   if (kind === "gateway_block") {
+    if (subject.includes("mcp:server") || str(raw?.reason) === "mcp-server") {
+      const verb = decision === "deny" ? "blocked" : "flagged";
+      return `Gateway ${verb} MCP server${alias ? ` (${alias})` : ""}`;
+    }
     if (subject.includes("auth") || str(raw?.reason).includes("mcpAuth")) {
       return `Gateway blocked MCP auth${alias ? ` (${alias})` : ""}`;
     }
@@ -97,6 +101,11 @@ export function deriveAlertTitle(
   if (kind === "santa_block") {
     return `Santa blocked ${name}`;
   }
+  if (syscall === "identity" || subject.startsWith("login:")) {
+    const harness = str(raw?.harness) || subject.split(":")[1] || "agent";
+    const pretty = harness.charAt(0).toUpperCase() + harness.slice(1);
+    return `Non-org ${pretty} login`;
+  }
   const verb = decision === "deny" ? "blocked" : "matched";
   const sys = syscall ? `${syscall} ` : "";
   return `Policy ${verb} ${sys}${name}`.trim();
@@ -110,6 +119,9 @@ export function deriveAlertSummary(input: {
   source: string;
 }): string {
   const host = input.hostname ? ` on ${input.hostname}` : "";
+  if (input.subject.startsWith("login:")) {
+    return `Non-org agent login${host}: ${input.subject}`;
+  }
   const verb = input.decision === "deny" ? "blocked" : "matched policy";
   return `${input.kind.replace(/_/g, " ")} ${verb}${host}: ${input.subject} (${input.source})`;
 }

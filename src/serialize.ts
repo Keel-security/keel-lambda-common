@@ -4,6 +4,7 @@ import { compileSantaFromDenyLists } from "./santaCompilePure";
 import { effectiveDenyLists } from "./effectivePolicy";
 import { mergeKindRules } from "./kindRules";
 import { normalizeMcpAuthDenied } from "./mcpAuth";
+import { normalizeEmailDomains, normalizePatternList } from "./policyLists";
 import type { PolicyCategory, PolicyLifecycleStatus, PolicySeverity } from "./schemas/types";
 
 type HostRow = typeof hosts.$inferSelect;
@@ -70,6 +71,9 @@ export function serializePolicy(p: PolicyRow) {
     agentRoots: roots,
     kindRules,
     mcpAuthDenied: normalizeMcpAuthDenied(p.mcpAuthDenied),
+    mcpAllow: normalizePatternList(p.mcpAllow),
+    mcpDeny: normalizePatternList(p.mcpDeny),
+    allowedEmailDomains: normalizeEmailDomains(p.allowedEmailDomains),
     santaPreview: {
       blockedPathRegex: compiled.blockedPathRegex,
       rules: compiled.rules.map((r) => ({
