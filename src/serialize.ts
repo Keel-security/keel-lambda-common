@@ -1,4 +1,4 @@
-import type { agents, hostPolicies, hosts, sensorEvents } from "./db/schema";
+import type { agents, alerts, hostPolicies, hosts, sensorEvents } from "./db/schema";
 import { DEFAULT_AGENT_ROOTS } from "./agentRoots";
 import { compileSantaFromDenyLists } from "./santaCompilePure";
 import { effectiveDenyLists } from "./effectivePolicy";
@@ -10,6 +10,7 @@ type HostRow = typeof hosts.$inferSelect;
 type PolicyRow = typeof hostPolicies.$inferSelect;
 type AgentRow = typeof agents.$inferSelect;
 type EventRow = typeof sensorEvents.$inferSelect;
+type AlertRow = typeof alerts.$inferSelect;
 
 const CATEGORIES = new Set(["exec", "path", "network", "credential", "custom"]);
 const SEVERITIES = new Set(["high", "medium", "low"]);
@@ -106,5 +107,30 @@ export function serializeEvent(e: EventRow, hostname?: string) {
     subject: e.subject,
     decision: e.decision,
     createdAt: e.createdAt.toISOString(),
+  };
+}
+
+export function serializeAlert(a: AlertRow, hostname?: string | null) {
+  return {
+    id: a.id,
+    hostId: a.hostId,
+    hostname: hostname ?? null,
+    agentId: a.agentId,
+    eventId: a.eventId,
+    source: a.source,
+    kind: a.kind,
+    severity: a.severity,
+    status: a.status,
+    title: a.title,
+    summary: a.summary,
+    subject: a.subject,
+    decision: a.decision,
+    count: a.count,
+    firstSeenAt: a.firstSeenAt.toISOString(),
+    lastSeenAt: a.lastSeenAt.toISOString(),
+    acknowledgedAt: a.acknowledgedAt?.toISOString() ?? null,
+    acknowledgedBy: a.acknowledgedBy,
+    resolvedAt: a.resolvedAt?.toISOString() ?? null,
+    resolvedBy: a.resolvedBy,
   };
 }

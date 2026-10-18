@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -172,3 +174,48 @@ export const sensorHeartbeats = pgTable("sensor_heartbeats", {
   payloadJson: jsonb("payload_json").$type<Record<string, unknown>>().notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+export const alertSeverityEnum = pgEnum("alert_severity", ["high", "medium", "low"]);
+export const alertStatusEnum = pgEnum("alert_status", ["open", "acknowledged", "resolved"]);
+export const alertKindEnum = pgEnum("alert_kind", [
+  "policy_violation",
+  "gateway_block",
+  "santa_block",
+]);
+
+export const alerts = pgTable(
+  "alerts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => orgs.id, { onDelete: "cascade" }),
+    hostId: uuid("host_id").references(() => hosts.id, { onDelete: "set null" }),
+    agentId: uuid("agent_id").references(() => agents.id, { onDelete: "set null" }),
+    eventId: uuid("event_id").references(() => sensorEvents.id, { onDelete: "set null" }),
+    source: text("source").notNull(),
+    kind: alertKindEnum("kind").notNull(),
+    severity: alertSeverityEnum("severity").notNull().default("medium"),
+    status: alertStatusEnum("status").notNull().default("open"),
+    title: text("title").notNull(),
+    summary: text("summary").notNull().default(""),
+    subject: text("subject").notNull(),
+    decision: decisionEnum("decision").notNull(),
+    fingerprint: text("fingerprint").notNull(),
+    count: integer("count").notNull().default(1),
+    rawJson: jsonb("raw_json").$type<Record<string, unknown>>().notNull().default({}),
+    firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).defaultNow().notNull(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
+    acknowledgedAt: timestamp("acknowledged_at", { withTimezone: true }),
+    acknowledgedBy: text("acknowledged_by"),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    resolvedBy: text("resolved_by"),
+  },
+  (t) => [
+    index("alerts_org_status_last").on(t.orgId, t.status, t.lastSeenAt),
+    index("alerts_org_fingerprint").on(t.orgId, t.fingerprint),
+    uniqueIndex("alerts_org_open_fingerprint")
+      .on(t.orgId, t.fingerprint)
+      .where(sql`${t.status} = 'open'`),
+  ],
+);

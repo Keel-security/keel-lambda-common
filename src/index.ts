@@ -27,3 +27,13 @@ export {
 export type { McpAuthMethod } from "./mcpAuth";
 export * from "./schemas/types";
 export * from "./schemas/santa";
+export {
+  upsertAlertFromEvent,
+  shouldCreateAlert,
+  classifyAlertKind,
+  deriveAlertTitle,
+  deriveAlertSeverity,
+  deriveAlertSummary,
+  alertFingerprint,
+} from "./alerts";
+export type { AlertEventInput } from "./alerts";

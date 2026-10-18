@@ -190,6 +190,7 @@ export const OverviewSchema = z.object({
   hostsTotal: z.number(),
   agentsTotal: z.number(),
   denies24h: z.number(),
+  openAlerts: z.number().optional().default(0),
   policiesEnforce: z.number(),
   policiesObserve: z.number(),
 });
@@ -231,3 +232,57 @@ export const SensorEventSchema = z.object({
   createdAt: z.string(),
 });
 export type SensorEvent = z.infer<typeof SensorEventSchema>;
+
+export const AlertKindSchema = z.enum(["policy_violation", "gateway_block", "santa_block"]);
+export type AlertKind = z.infer<typeof AlertKindSchema>;
+
+export const AlertSeveritySchema = z.enum(["high", "medium", "low"]);
+export type AlertSeverity = z.infer<typeof AlertSeveritySchema>;
+
+export const AlertStatusSchema = z.enum(["open", "acknowledged", "resolved"]);
+export type AlertStatus = z.infer<typeof AlertStatusSchema>;
+
+export const AlertSchema = z.object({
+  id: z.string(),
+  hostId: z.string().nullable(),
+  hostname: z.string().nullable().optional(),
+  agentId: z.string().nullable(),
+  eventId: z.string().nullable(),
+  source: z.string(),
+  kind: AlertKindSchema,
+  severity: AlertSeveritySchema,
+  status: AlertStatusSchema,
+  title: z.string(),
+  summary: z.string(),
+  subject: z.string(),
+  decision: DecisionSchema,
+  count: z.number(),
+  firstSeenAt: z.string(),
+  lastSeenAt: z.string(),
+  acknowledgedAt: z.string().nullable(),
+  acknowledgedBy: z.string().nullable(),
+  resolvedAt: z.string().nullable(),
+  resolvedBy: z.string().nullable(),
+});
+export type Alert = z.infer<typeof AlertSchema>;
+
+export const CreateAlertSchema = z.object({
+  hostname: z.string().min(1),
+  subject: z.string().min(1),
+  kind: AlertKindSchema.optional(),
+  source: z.string().min(1).optional(),
+  title: z.string().min(1).optional(),
+  summary: z.string().optional(),
+  severity: AlertSeveritySchema.optional(),
+  decision: DecisionSchema.optional().default("deny"),
+  syscall: SyscallSchema.optional(),
+  agentExternalId: z.string().optional().nullable(),
+  raw: z.record(z.unknown()).optional().default({}),
+  occurredAt: z.string().datetime().optional(),
+});
+export type CreateAlert = z.infer<typeof CreateAlertSchema>;
+
+export const PatchAlertSchema = z.object({
+  status: AlertStatusSchema,
+});
+export type PatchAlert = z.infer<typeof PatchAlertSchema>;

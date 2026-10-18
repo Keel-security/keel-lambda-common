@@ -8,6 +8,7 @@ Used by:
 - `keel-lambda-inventory`
 - `keel-lambda-policies`
 - `keel-lambda-events`
+- `keel-lambda-alert`
 - `keel-lambda-santa`
 
 Local workspaces use `"@keel/lambda-common": "file:../keel-lambda-common"`. For separate GitHub repos, publish this package (or git-submodule) and pin the version.
