@@ -39,7 +39,7 @@ export const MCP_AUTH_METHODS: {
   {
     id: "stdio_env_secret",
     label: "Stdio env secrets",
-    hint: "API keys in stdio MCP env — inventory only; HTTP gateway cannot see them",
+    hint: "API keys in stdio MCP env (mcp.json env). Inventory + Alert; HTTP gateway cannot see them",
     shipped: true,
   },
   {

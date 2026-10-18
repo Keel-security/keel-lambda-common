@@ -103,8 +103,18 @@ export function deriveAlertTitle(
   }
   if (syscall === "identity" || subject.startsWith("login:")) {
     const harness = str(raw?.harness) || subject.split(":")[1] || "agent";
+    const login = str(raw?.login);
     const pretty = harness.charAt(0).toUpperCase() + harness.slice(1);
+    if (str(raw?.provider) || /mcp/i.test(harness) || str(raw?.alias)) {
+      return `Non-org ${pretty} login${login ? ` (@${login})` : ""}`;
+    }
     return `Non-org ${pretty} login`;
+  }
+  if (subject.startsWith("mcp:auth:") || str(raw?.reason) === "mcpAuth") {
+    const method = str(raw?.authMethod);
+    const who = alias || name;
+    const extra = method ? ` · ${method}` : "";
+    return `MCP uses blocked credential (${who}${extra})`;
   }
   const verb = decision === "deny" ? "blocked" : "matched";
   const sys = syscall ? `${syscall} ` : "";
@@ -121,6 +131,9 @@ export function deriveAlertSummary(input: {
   const host = input.hostname ? ` on ${input.hostname}` : "";
   if (input.subject.startsWith("login:")) {
     return `Non-org agent login${host}: ${input.subject}`;
+  }
+  if (input.subject.startsWith("mcp:auth:")) {
+    return `MCP credential method denied by policy${host}: ${input.subject}`;
   }
   const verb = input.decision === "deny" ? "blocked" : "matched policy";
   return `${input.kind.replace(/_/g, " ")} ${verb}${host}: ${input.subject} (${input.source})`;
